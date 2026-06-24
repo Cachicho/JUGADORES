@@ -330,6 +330,7 @@ io.on("connection", (socket) => {
     if (!result.ok) return socket.emit("error:toast", result.error);
     emitRoomState(room);
     emitIntermedioState(room);
+    scheduleAutoSkipIfNeeded(room);
   });
 
   socket.on("intermedio:place_bet", ({ amount }) => {
@@ -348,6 +349,7 @@ io.on("connection", (socket) => {
     if (!result.ok) return socket.emit("error:toast", result.error);
     emitRoomState(ctx.room);
     emitIntermedioState(ctx.room);
+    scheduleAutoSkipIfNeeded(ctx.room);
   });
 
   socket.on("intermedio:reveal", () => {
@@ -367,7 +369,23 @@ io.on("connection", (socket) => {
     if (!result.ok) return socket.emit("error:toast", result.error);
     emitRoomState(ctx.room);
     emitIntermedioState(ctx.room);
+    scheduleAutoSkipIfNeeded(ctx.room);
   });
+
+  // Si las dos cartas repartidas son consecutivas (no hay número "en medio"),
+  // nadie puede apostar — el servidor avanza solo al siguiente turno tras una
+  // pausa breve para que se llegue a leer el aviso en pantalla.
+  function scheduleAutoSkipIfNeeded(room) {
+    clearTimeout(room.intermedio._autoSkipTimer);
+    if (room.intermedio.phase !== "turn" || !room.intermedio.forcedSkip) return;
+    room.intermedio._autoSkipTimer = setTimeout(() => {
+      const result = intermedio.skipTurn(room.intermedio);
+      if (!result.ok) return;
+      emitRoomState(room);
+      emitIntermedioState(room);
+      scheduleAutoSkipIfNeeded(room); // por si la siguiente mano también es consecutiva
+    }, 2800);
+  }
 
   // ── Desconexión ─────────────────────────────────────────────────────────
   socket.on("disconnect", () => {
