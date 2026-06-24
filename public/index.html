@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>TODO YAMBA — Hub de Juegos</title>
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="toasts" class="toasts"></div>
+
+<!-- ═══════════════ VISTA: HUB / ENTRADA ═══════════════ -->
+<section id="view-hub" class="view view-hub">
+  <div class="hub-bg"></div>
+  <div class="hub-card">
+    <div class="hub-logo">
+      <div class="hub-logo-emoji">🎰</div>
+      <h1 class="hub-title">TODO YAMBA</h1>
+      <p class="hub-subtitle">Hub de Juegos Recreativos</p>
+    </div>
+
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-tab="join">Unirme a una sala</button>
+      <button class="hub-tab" data-tab="create">Crear sala (admin)</button>
+    </div>
+
+    <div id="tab-join" class="hub-tab-panel active">
+      <label class="field-label">Código de sala</label>
+      <input id="input-room-code" class="field-input field-code" placeholder="EJ: 7F3K9" maxlength="5" autocomplete="off" />
+      <label class="field-label">Tu nombre</label>
+      <input id="input-name-join" class="field-input" placeholder="Ej: El Tiburón" maxlength="24" autocomplete="off" />
+      <label class="field-label">Avatar</label>
+      <div id="avatar-grid-join" class="avatar-grid"></div>
+      <button id="btn-join" class="btn btn-gold btn-block">🎲 Entrar a la sala</button>
+      <p id="join-error" class="field-error"></p>
+    </div>
+
+    <div id="tab-create" class="hub-tab-panel">
+      <label class="field-label">Tu nombre (organizador)</label>
+      <input id="input-name-create" class="field-input" placeholder="Ej: Manu" maxlength="24" autocomplete="off" />
+      <label class="field-label">Avatar</label>
+      <div id="avatar-grid-create" class="avatar-grid"></div>
+      <label class="field-label">PIN de administrador</label>
+      <input id="input-pin" type="password" class="field-input field-code" placeholder="••••••••" maxlength="10" autocomplete="off" />
+      <button id="btn-create" class="btn btn-gold btn-block">👑 Crear sala nueva</button>
+      <p id="create-error" class="field-error"></p>
+    </div>
+
+    <p class="hub-footer">Solo recreativo · Sin dinero real · ¡Juega con responsabilidad!</p>
+  </div>
+</section>
+
+<!-- ═══════════════ VISTA: LOBBY / SELECTOR DE JUEGO ═══════════════ -->
+<section id="view-lobby" class="view view-lobby hidden">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-emoji">🎰</span>
+      <div>
+        <h2 class="topbar-title">TODO YAMBA</h2>
+        <p class="topbar-sub">Sala <span id="lobby-room-code" class="code-pill"></span></p>
+      </div>
+    </div>
+    <div id="topbar-player" class="topbar-player"></div>
+  </header>
+
+  <main class="lobby-main">
+    <h3 class="lobby-heading">Elige un juego</h3>
+    <div class="game-cards">
+      <button class="game-card" data-game="roulette">
+        <div class="game-card-icon">🎡</div>
+        <div class="game-card-title">Ruleta Europea</div>
+        <div class="game-card-desc">Apuesta a números, colores, calles y más</div>
+      </button>
+      <button class="game-card" data-game="intermedio">
+        <div class="game-card-icon">🃏</div>
+        <div class="game-card-title">Intermedio</div>
+        <div class="game-card-desc">In-Between: ¿la carta queda en medio?</div>
+      </button>
+    </div>
+
+    <h3 class="lobby-heading">Jugadores en la sala</h3>
+    <div id="lobby-players" class="lobby-players"></div>
+  </main>
+</section>
+
+<!-- ═══════════════ VISTA: RULETA ═══════════════ -->
+<section id="view-roulette" class="view view-game hidden">
+  <header class="topbar">
+    <button class="btn-back" data-back="lobby">← Lobby</button>
+    <div class="topbar-center">
+      <h2 class="topbar-title">🎡 Ruleta Europea</h2>
+      <p id="roulette-phase-label" class="topbar-sub phase-label">Esperando ronda...</p>
+    </div>
+    <div id="topbar-player-roulette" class="topbar-player"></div>
+  </header>
+
+  <main class="game-main">
+    <aside class="side-panel side-left">
+      <div id="roulette-history" class="panel-box">
+        <p class="panel-title">Últimos números</p>
+        <div id="history-dots" class="history-dots"></div>
+      </div>
+      <div class="panel-box panel-grow">
+        <p class="panel-title">Feed en vivo</p>
+        <div id="roulette-feed" class="feed-list"></div>
+      </div>
+      <div class="panel-box">
+        <p class="panel-title">Jugadores</p>
+        <div id="roulette-players" class="players-list"></div>
+      </div>
+    </aside>
+
+    <div class="center-col">
+      <div class="wheel-wrap">
+        <div id="wheel-glow" class="wheel-glow"></div>
+        <div class="wheel-outer">
+          <div id="wheel-spin" class="wheel-spin">
+            <svg id="wheel-svg" viewBox="0 0 200 200" class="wheel-svg"></svg>
+          </div>
+          <div id="ball-spin" class="ball-spin"><div class="ball-dot"></div></div>
+          <div id="wheel-result" class="wheel-result hidden"></div>
+        </div>
+        <div id="countdown-pill" class="countdown-pill hidden"></div>
+      </div>
+
+      <div class="controls-row">
+        <button id="btn-start-round" class="btn btn-gold">🎯 Iniciar Ronda</button>
+        <button id="btn-repeat-bet" class="btn btn-outline-gold hidden">🔁 Repetir</button>
+        <button id="btn-double-bet" class="btn btn-outline-blue hidden">×2 Redoblar</button>
+        <button id="btn-clear-bets" class="btn btn-outline-red hidden">🗑️</button>
+      </div>
+
+      <div id="chip-selector" class="chip-selector"></div>
+      <p class="chip-selected-label">Seleccionada: <span id="chip-selected-value"></span></p>
+
+      <div id="mobile-bet-hint" class="mobile-hint hidden">👉 Desliza para ver todo el tablero</div>
+      <div id="board-scroll" class="board-scroll">
+        <div id="betting-board" class="betting-board"></div>
+      </div>
+
+      <div id="my-bets-summary" class="my-bets-summary hidden"></div>
+    </div>
+
+    <aside class="side-panel side-right">
+      <div class="panel-box">
+        <p class="panel-title">Mi saldo</p>
+        <div id="my-balance-box" class="my-balance-box"></div>
+      </div>
+    </aside>
+  </main>
+</section>
+
+<!-- ═══════════════ VISTA: INTERMEDIO ═══════════════ -->
+<section id="view-intermedio" class="view view-game hidden">
+  <header class="topbar">
+    <button class="btn-back" data-back="lobby">← Lobby</button>
+    <div class="topbar-center">
+      <h2 class="topbar-title">🃏 Intermedio</h2>
+      <p id="intermedio-phase-label" class="topbar-sub phase-label">Esperando ronda...</p>
+    </div>
+    <div id="topbar-player-intermedio" class="topbar-player"></div>
+  </header>
+
+  <main class="game-main">
+    <aside class="side-panel side-left">
+      <div class="panel-box">
+        <p class="panel-title">Pozo central</p>
+        <div id="pot-display" class="pot-display">$0</div>
+      </div>
+      <div class="panel-box panel-grow">
+        <p class="panel-title">Historial de la sala</p>
+        <div id="intermedio-log" class="feed-list"></div>
+      </div>
+    </aside>
+
+    <div class="center-col">
+      <button id="btn-start-intermedio" class="btn btn-gold">🃏 Iniciar Ronda (cobra ante a todos)</button>
+
+      <div id="turn-order-strip" class="turn-order-strip"></div>
+
+      <div class="cards-table">
+        <div class="card-slot" id="card-a"><div class="card-face">?</div></div>
+        <div class="card-vs">y</div>
+        <div class="card-slot" id="card-b"><div class="card-face">?</div></div>
+        <div class="card-arrow">→</div>
+        <div class="card-slot card-slot-third" id="card-c"><div class="card-face card-face-back">🂠</div></div>
+      </div>
+
+      <p id="intermedio-status" class="intermedio-status"></p>
+
+      <div id="bet-controls" class="bet-controls hidden">
+        <input id="intermedio-bet-amount" type="number" min="1" class="field-input bet-amount-input" placeholder="Monto a apostar" />
+        <button id="btn-intermedio-bet" class="btn btn-gold">Apostar</button>
+        <button id="btn-intermedio-skip" class="btn btn-outline-red">Pasar turno</button>
+      </div>
+
+      <div id="reveal-controls" class="reveal-controls hidden">
+        <button id="btn-intermedio-reveal" class="btn btn-gold btn-large">🎴 Revelar tercera carta</button>
+      </div>
+
+      <div id="next-controls" class="next-controls hidden">
+        <button id="btn-intermedio-next" class="btn btn-outline-gold">Siguiente turno →</button>
+      </div>
+    </div>
+
+    <aside class="side-panel side-right">
+      <div class="panel-box">
+        <p class="panel-title">Jugadores</p>
+        <div id="intermedio-players" class="players-list players-list-turn"></div>
+      </div>
+    </aside>
+  </main>
+</section>
+
+<!-- ═══════════════ PANEL ADMIN (flotante, disponible en todas las vistas internas) ═══════════════ -->
+<button id="btn-admin-panel" class="admin-fab hidden" title="Panel de Administrador">🛡️</button>
+<div id="admin-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span class="modal-icon">🛡️</span>
+      <h3>Panel Admin — TODO YAMBA</h3>
+      <button id="btn-close-admin" class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="panel-box">
+        <p class="panel-title">Saldo de jugadores</p>
+        <div id="admin-players-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/roulette.js"></script>
+<script src="/js/intermedio.js"></script>
+</body>
+</html>
