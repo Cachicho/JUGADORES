@@ -45,6 +45,8 @@
     const revealControls = document.getElementById("reveal-controls");
     const nextControls = document.getElementById("next-controls");
     const startBtn = document.getElementById("btn-start-intermedio");
+    const anteControls = document.getElementById("ante-controls");
+    const anteInput = document.getElementById("intermedio-ante-amount");
     const phaseLabel = document.getElementById("intermedio-phase-label");
 
     betControls.classList.add("hidden");
@@ -53,13 +55,14 @@
 
     if (!state || state.phase === "waiting" || state.phase === "round_over") {
       phaseLabel.textContent = state?.phase === "round_over" ? "Ronda terminada" : "Esperando ronda...";
-      startBtn.classList.remove("hidden");
+      anteControls.classList.remove("hidden");
       startBtn.disabled = !App.player?.isAdmin;
-      statusEl.textContent = state?.phase === "round_over" ? "El pozo se vació. El administrador puede iniciar una nueva ronda." : "";
+      anteInput.disabled = !App.player?.isAdmin;
+      statusEl.textContent = state?.phase === "round_over" ? "El pozo se vació. El administrador puede iniciar una nueva ronda." : "Define el pozo inicial (ante) y presiona iniciar.";
       return;
     }
 
-    startBtn.classList.add("hidden");
+    anteControls.classList.add("hidden");
     const isMyTurn = state.currentPlayerId === App.player?.id;
     const me = App.players.find((p) => p.id === App.player?.id);
 
@@ -120,7 +123,11 @@
   function onPlayers() { renderPlayers(); renderTurnOrder(); }
   function onEnter() { renderAll(); }
 
-  document.getElementById("btn-start-intermedio")?.addEventListener("click", () => socket.emit("intermedio:start_round"));
+  document.getElementById("btn-start-intermedio")?.addEventListener("click", () => {
+    const ante = Number(document.getElementById("intermedio-ante-amount").value);
+    if (!ante || ante < 1) return showToast("Define un pozo inicial (ante) válido.", "error");
+    socket.emit("intermedio:start_round", { ante });
+  });
   document.getElementById("btn-intermedio-bet")?.addEventListener("click", () => {
     const amount = Number(document.getElementById("intermedio-bet-amount").value);
     if (!amount || amount < 1) return showToast("Ingresa un monto válido.", "error");
