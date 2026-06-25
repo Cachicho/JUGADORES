@@ -321,12 +321,13 @@ io.on("connection", (socket) => {
   });
 
   // ══════════════════════════ INTERMEDIO ══════════════════════════════════
-  socket.on("intermedio:start_round", () => {
+  socket.on("intermedio:start_round", (payload) => {
     const ctx = requireAdmin(socket);
     if (!ctx) return;
     const room = ctx.room;
     const playerIds = Array.from(room.players.keys());
-    const result = intermedio.startRound(room.intermedio, room.players, playerIds);
+    const customAnte = payload && payload.ante !== undefined ? payload.ante : undefined;
+    const result = intermedio.startRound(room.intermedio, room.players, playerIds, customAnte);
     if (!result.ok) return socket.emit("error:toast", result.error);
     emitRoomState(room);
     emitIntermedioState(room);
@@ -386,6 +387,56 @@ io.on("connection", (socket) => {
       scheduleAutoSkipIfNeeded(room); // por si la siguiente mano también es consecutiva
     }, 2800);
   }
+
+  // ── Salir de la sala (cualquier jugador, voluntario) ───────────────────
+  socket.on("room:leave_room", (_data, cb) => {
+    const ctx = requireRoom(socket);
+    if (!ctx) return typeof cb === "function" && cb({ ok: false });
+    const { room, playerId } = ctx;
+    room.players.delete(playerId);
+    socket.leave(room.code);
+    socketIndex.delete(socket.id);
+    emitRoomState(room);
+    roomManager.removeRoomIfEmpty(room.code);
+    if (typeof cb === "function") cb({ ok: true });
+  });
+
+  // ── Admin: eliminar a un jugador de la sala ────────────────────────────
+  socket.on("admin:kick_player", ({ playerId }) => {
+    const ctx = requireAdmin(socket);
+    if (!ctx) return;
+    if (playerId === ctx.playerId) return; // el admin se va con "salir" o "cerrar sala", no con esto
+    const target = ctx.room.players.get(playerId);
+    if (!target) return;
+
+    const targetSocket = io.sockets.sockets.get(target.socketId);
+    if (targetSocket) {
+      targetSocket.emit("room:kicked");
+      targetSocket.leave(ctx.room.code);
+      socketIndex.delete(targetSocket.id);
+    }
+    ctx.room.players.delete(playerId);
+    emitRoomState(ctx.room);
+  });
+
+  // ── Admin: cerrar la sala completa para todos ──────────────────────────
+  socket.on("admin:close_room", () => {
+    const ctx = requireAdmin(socket);
+    if (!ctx) return;
+    const room = ctx.room;
+
+    for (const player of room.players.values()) {
+      const playerSocket = io.sockets.sockets.get(player.socketId);
+      if (playerSocket) {
+        playerSocket.emit("room:closed");
+        playerSocket.leave(room.code);
+        socketIndex.delete(playerSocket.id);
+      }
+    }
+    clearTimeout(room.roulette._timer);
+    clearTimeout(room.intermedio._autoSkipTimer);
+    roomManager.rooms.delete(room.code);
+  });
 
   // ── Desconexión ─────────────────────────────────────────────────────────
   socket.on("disconnect", () => {
