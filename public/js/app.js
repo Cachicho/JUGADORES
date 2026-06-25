@@ -10,6 +10,7 @@ const App = {
   player: null,
   roomCode: null,
   players: [],
+  departed: [],
   game: "lobby",
   selectedAvatarJoin: "🎩",
   selectedAvatarCreate: "🎩",
@@ -91,6 +92,7 @@ function initSocket() {
   App.socket.on("room:state", (state) => {
     App.players = state.players;
     App.game = state.game;
+    App.departed = state.departed || [];
     renderTopbarPlayer();
     renderLobbyPlayers();
     renderAdminList();
@@ -229,7 +231,35 @@ document.getElementById("btn-close-admin").addEventListener("click", () => {
   document.getElementById("admin-modal").classList.add("hidden");
 });
 
+function renderDepartedList() {
+  const box = document.getElementById("admin-departed-box");
+  const el = document.getElementById("admin-departed-list");
+  if (!box || !el || !App.player?.isAdmin) return;
+  const list = App.departed || [];
+  box.classList.toggle("hidden", list.length === 0);
+  if (list.length === 0) return;
+  el.innerHTML = list.map((d) => {
+    const minsAgo = Math.max(0, Math.round((Date.now() - d.ts) / 60000));
+    return `
+    <div class="admin-player-card">
+      <div class="admin-player-head">
+        <span style="font-size:20px">${d.avatar}</span>
+        <span style="font-weight:700">${escapeHtml(d.name)}</span>
+        <span class="ap-balance">${formatCOP(d.balance)}</span>
+      </div>
+      <p class="admin-sublabel">${d.reason} hace ${minsAgo} min — dale este monto manualmente si vuelve a entrar</p>
+      <button class="btn btn-outline-gold" data-action="clear-departed" data-id="${d.id}" style="margin-top:6px; padding:6px 12px; font-size:12px;">✓ Ya se le pagó / descartar</button>
+    </div>
+  `;
+  }).join("");
+
+  el.querySelectorAll("[data-action='clear-departed']").forEach((b) =>
+    b.addEventListener("click", () => App.socket.emit("admin:clear_departed", { id: b.dataset.id }))
+  );
+}
+
 function renderAdminList() {
+  renderDepartedList();
   const el = document.getElementById("admin-players-list");
   if (!el || !App.player?.isAdmin) return;
   el.innerHTML = App.players.map((p) => `
