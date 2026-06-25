@@ -63,7 +63,10 @@
         <p class="topbar-sub">Sala <span id="lobby-room-code" class="code-pill"></span></p>
       </div>
     </div>
-    <div id="topbar-player" class="topbar-player"></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div id="topbar-player" class="topbar-player"></div>
+      <button id="btn-leave-room" class="btn btn-outline-red" style="padding:8px 14px; font-size:12px;">🚪 Salir de la sala</button>
+    </div>
   </header>
 
   <main class="lobby-main">
@@ -228,6 +231,10 @@
       <button id="btn-close-admin" class="modal-close">✕</button>
     </div>
     <div class="modal-body">
+      <div class="panel-box">
+        <p class="panel-title">Sala</p>
+        <button id="btn-close-room" class="btn btn-outline-red btn-block">🔒 Cerrar sala para todos</button>
+      </div>
       <div class="panel-box">
         <p class="panel-title">Saldo de jugadores</p>
         <div id="admin-players-list"></div>
