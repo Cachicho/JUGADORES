@@ -59,7 +59,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "32kb" }));
 
-app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
+// Sin caché: evita que navegadores o el CDN del hosting sirvan una versión
+// vieja de la app después de actualizar el código (problema recurrente).
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    extensions: ["html"],
+    etag: false,
+    lastModified: false,
+    setHeaders: (res) => res.set("Cache-Control", "no-store"),
+  })
+);
 
 app.get("/healthz", (req, res) => res.json({ ok: true, ts: Date.now() }));
 
@@ -83,6 +92,7 @@ function emitRoomState(room) {
     code: room.code,
     game: room.game,
     players: room.playerList(),
+    departed: room.departed,
   });
 }
 
@@ -393,6 +403,8 @@ io.on("connection", (socket) => {
     const ctx = requireRoom(socket);
     if (!ctx) return typeof cb === "function" && cb({ ok: false });
     const { room, playerId } = ctx;
+    const player = room.players.get(playerId);
+    if (player) room.recordDeparture(player, "salió");
     room.players.delete(playerId);
     socket.leave(room.code);
     socketIndex.delete(socket.id);
@@ -415,7 +427,16 @@ io.on("connection", (socket) => {
       targetSocket.leave(ctx.room.code);
       socketIndex.delete(targetSocket.id);
     }
+    ctx.room.recordDeparture(target, "eliminado");
     ctx.room.players.delete(playerId);
+    emitRoomState(ctx.room);
+  });
+
+  // ── Admin: marca como "ya pagado" un registro de jugador que se fue ─────
+  socket.on("admin:clear_departed", ({ id }) => {
+    const ctx = requireAdmin(socket);
+    if (!ctx) return;
+    ctx.room.departed = ctx.room.departed.filter((d) => d.id !== id);
     emitRoomState(ctx.room);
   });
 
@@ -448,10 +469,19 @@ io.on("connection", (socket) => {
     const player = room.players.get(idx.playerId);
     if (player) player.connected = false;
     emitRoomState(room);
-    // No se borra la sala inmediatamente: permite reconexión con el mismo playerId.
+
+    // Da 5 minutos de gracia para reconectar con el mismo playerId (recupera
+    // el saldo automáticamente). Si no vuelve, se guarda en "departed" con su
+    // saldo exacto para que el admin pueda restituirlo a mano si reaparece
+    // como jugador nuevo (p. ej. se le cerró la sesión sin querer).
     setTimeout(() => {
-      const stillThere = Array.from(room.players.values()).some((p) => p.connected);
-      if (!stillThere) roomManager.rooms.delete(room.code);
+      const stillThere = room.players.get(idx.playerId);
+      if (stillThere && !stillThere.connected) {
+        room.recordDeparture(stillThere, "se desconectó");
+        room.players.delete(idx.playerId);
+        emitRoomState(room);
+        roomManager.removeRoomIfEmpty(room.code);
+      }
     }, 5 * 60 * 1000);
   });
 });
