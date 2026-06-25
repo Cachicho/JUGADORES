@@ -1,3 +1,6 @@
+**5/8 — `public/css/style.css`**
+
+```css
 :root {
   --bg: #0a0a0f;
   --surface: #13131a;
@@ -225,13 +228,25 @@ input { font-family: inherit; }
 .mobile-hint { color: var(--gold-500); font-size: 12px; text-align: center; animation: blink 1.6s infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 
-.board-scroll { width: 100%; overflow-x: auto; padding-bottom: 6px; }
+.board-scroll { width: 100%; overflow-x: visible; padding-bottom: 6px; transition: margin .2s, width .2s; }
 .betting-board {
   background: radial-gradient(ellipse at center, #1a4a2e 0%, #0d2b1a 60%, #061509 100%);
   border-radius: 18px; padding: 12px; box-shadow: inset 0 2px 20px rgba(0,0,0,.5), 0 4px 20px rgba(0,0,0,.5);
-  border: 1px solid rgba(217,119,6,.3); min-width: 560px; transition: min-width .2s;
+  border: 1px solid rgba(217,119,6,.3); width: 100%; box-sizing: border-box;
+  overflow-x: hidden; /* recorta el milimétrico desborde de los hotspots circulares de línea/esquina */
+  transition: padding .2s;
 }
-.betting-board.betting-active { min-width: 760px; }
+/* Escritorio/tablet: al apostar se agranda con scroll horizontal disponible (hay espacio de sobra) */
+@media (min-width: 700px) {
+  .board-scroll { overflow-x: auto; }
+  .betting-board { min-width: 560px; }
+  .betting-board.betting-active { min-width: 760px; }
+}
+/* Celular: en vez de obligar a desplazar, el paño ocupa todo el ancho de pantalla mientras se apuesta */
+@media (max-width: 699px) {
+  .board-scroll.mobile-bleed { margin-left: -12px; margin-right: -12px; width: calc(100% + 24px); }
+  .betting-board.betting-active { padding: 8px 6px; }
+}
 .bb-caption { text-align: center; font-size: 10px; color: rgba(245,158,11,.5); text-transform: uppercase; letter-spacing: .1em; margin: 0 0 6px; }
 .bb-zero-row { display: flex; gap: 4px; margin-bottom: 8px; }
 .bb-zero-btn {
@@ -318,6 +333,10 @@ input { font-family: inherit; }
 
 /* ── INTERMEDIO ───────────────────────────────────────────── */
 .pot-display { font-size: 26px; font-weight: 900; color: var(--gold-500); text-align: center; }
+.pot-display-mobile {
+  font-size: 18px; font-weight: 900; color: var(--gold-500); text-align: center;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 16px;
+}
 .turn-order-strip { display: flex; gap: 8px; overflow-x: auto; max-width: 100%; padding: 4px; }
 .turn-chip { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); flex-shrink: 0; }
 .turn-chip.active { border-color: var(--gold-500); box-shadow: 0 0 16px rgba(245,158,11,.3); }
@@ -370,3 +389,4 @@ input { font-family: inherit; }
 .admin-custom-row { display: flex; gap: 6px; }
 .admin-custom-row input { flex: 1; padding: 6px 8px; font-size: 12px; }
 .admin-custom-row button { padding: 6px 10px; border-radius: 8px; font-weight: 800; font-size: 13px; }
+```
