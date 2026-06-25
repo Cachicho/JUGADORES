@@ -1,6 +1,3 @@
-**5/8 — `public/css/style.css`**
-
-```css
 :root {
   --bg: #0a0a0f;
   --surface: #13131a;
@@ -389,4 +386,3 @@ input { font-family: inherit; }
 .admin-custom-row { display: flex; gap: 6px; }
 .admin-custom-row input { flex: 1; padding: 6px 8px; font-size: 12px; }
 .admin-custom-row button { padding: 6px 10px; border-radius: 8px; font-weight: 800; font-size: 13px; }
-```
