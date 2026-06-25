@@ -85,6 +85,8 @@ function initSocket() {
 
   App.socket.on("connect_error", () => showToast("No se pudo conectar al servidor.", "error"));
   App.socket.on("error:toast", (msg) => showToast(msg, "error"));
+  App.socket.on("room:kicked", () => resetToHub("El administrador te eliminó de la sala.", "error"));
+  App.socket.on("room:closed", () => resetToHub("El administrador cerró la sala.", "error"));
 
   App.socket.on("room:state", (state) => {
     App.players = state.players;
@@ -236,6 +238,7 @@ function renderAdminList() {
         <span style="font-size:20px">${p.avatar}</span>
         <span style="font-weight:700">${escapeHtml(p.name)}</span>
         <span class="ap-balance">${formatCOP(p.balance)}</span>
+        ${p.id !== App.player?.id ? `<button class="btn btn-outline-red" data-action="kick" data-id="${p.id}" style="margin-left:8px; padding:4px 10px; font-size:11px;">Eliminar</button>` : ""}
       </div>
       <p class="admin-sublabel">Recargar</p>
       <div class="admin-amt-row">
@@ -271,7 +274,36 @@ function renderAdminList() {
       if (v > 0) App.socket.emit("admin:deduct", { playerId: b.dataset.id, amount: v });
     })
   );
+  el.querySelectorAll("[data-action='kick']").forEach((b) =>
+    b.addEventListener("click", () => {
+      const target = App.players.find((p) => p.id === b.dataset.id);
+      if (!confirm(`¿Eliminar a ${target?.name || "este jugador"} de la sala?`)) return;
+      App.socket.emit("admin:kick_player", { playerId: b.dataset.id });
+    })
+  );
 }
+
+// ═══════════════════ SALIR / CERRAR SALA ═══════════════════
+function resetToHub(message, type) {
+  localStorage.removeItem("yamba_session");
+  App.player = null;
+  App.roomCode = null;
+  App.players = [];
+  document.getElementById("admin-modal").classList.add("hidden");
+  showView("hub");
+  if (message) showToast(message, type || "success");
+}
+
+document.getElementById("btn-leave-room")?.addEventListener("click", () => {
+  if (!confirm("¿Seguro que quieres salir de la sala?")) return;
+  App.socket.emit("room:leave_room", {}, () => resetToHub("Saliste de la sala.", "success"));
+});
+
+document.getElementById("btn-close-room")?.addEventListener("click", () => {
+  if (!confirm("Esto cierra la sala para TODOS los jugadores. ¿Continuar?")) return;
+  App.socket.emit("admin:close_room");
+  resetToHub("Cerraste la sala.", "success");
+});
 
 // ═══════════════════ BOOT ═══════════════════
 window.App = App;
