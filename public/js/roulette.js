@@ -93,6 +93,9 @@
   // ── Render: tablero de apuestas ──
   function buildBettingBoard() {
     const board = document.getElementById("betting-board");
+    const isMobile = window.innerWidth < 700;
+    const zeroColW = isMobile ? 34 : 48;
+    const sideMargin = isMobile ? 36 : 52;
     const splitsH = [], splitsV = [], corners = [], streets = [], lines = [];
     for (let r=0;r<3;r++) for (let c=0;c<COLS-1;c++) splitsH.push({ r, c, a: ROWS[r][c], b: ROWS[r][c+1] });
     for (let c=0;c<COLS;c++) for (let r=0;r<2;r++) splitsV.push({ r, c, a: ROWS[r][c], b: ROWS[r+1][c] });
@@ -105,7 +108,7 @@
 
     let html = `<p class="bb-caption">Pleno · Medio · Esquina · Calle · Línea</p>`;
     html += `<div class="bb-zero-row">`;
-    html += `<button class="bb-zero-btn" data-bet-id="straight-0" style="height:${ROWH*3}px" data-action="straight" data-n="0">0</button>`;
+    html += `<button class="bb-zero-btn" data-bet-id="straight-0" style="height:${ROWH*3}px; width:${zeroColW}px;" data-action="straight" data-n="0">0</button>`;
     html += `<div class="bb-grid-wrap" style="height:${ROWH*3}px">`;
     html += `<div class="bb-grid">`;
     ROWS.forEach((row) => row.forEach((n) => {
@@ -129,27 +132,27 @@
     html += `</div>`; // bb-grid-wrap
     html += `</div>`; // bb-zero-row
 
-    html += `<p class="bb-hint-label">↓ Calle (3 números)</p><div class="bb-street-row" style="margin-left:52px">`;
+    html += `<p class="bb-hint-label">↓ Calle (3 números)</p><div class="bb-street-row" style="margin-left:${sideMargin}px">`;
     streets.forEach(({c,nums}) => {
       const id = `street-${[...nums].sort((x,y)=>x-y).join("-")}`;
       html += `<button class="bb-street-btn" data-bet-id="${id}" data-action="street" data-nums="${nums.join(",")}" title="Calle ${nums.join('-')}"></button>`;
     });
     html += `</div>`;
 
-    html += `<p class="bb-hint-label">↓ Línea (6 números)</p><div class="bb-line-row" style="margin-left:52px">`;
+    html += `<p class="bb-hint-label">↓ Línea (6 números)</p><div class="bb-line-row" style="margin-left:${sideMargin}px">`;
     lines.forEach(({c,nums}) => {
       const id = `line-${[...nums].sort((x,y)=>x-y).join("-")}`;
       html += `<button class="bb-line-btn" style="left:${colPct(c)}%; top:50%;" data-bet-id="${id}" data-action="line" data-nums="${nums.join(",")}" title="Línea ${nums.join(',')}"></button>`;
     });
     html += `</div>`;
 
-    html += `<div class="bb-outside-row" style="margin-left:52px">`;
+    html += `<div class="bb-outside-row" style="margin-left:${sideMargin}px">`;
     [1,2,3].forEach((col) => { html += `<button class="bb-outside-btn" data-bet-id="col-${col}" data-action="column" data-c="${col}">2:1<small>Col ${col}</small></button>`; });
     html += `</div>`;
-    html += `<div class="bb-outside-row" style="margin-left:52px">`;
+    html += `<div class="bb-outside-row" style="margin-left:${sideMargin}px">`;
     [1,2,3].forEach((d) => { html += `<button class="bb-outside-btn" data-bet-id="dozen-${d}" data-action="dozen" data-d="${d}">${(d-1)*12+1}-${d*12}<small>Docena</small></button>`; });
     html += `</div>`;
-    html += `<div class="bb-outside-row" style="margin-left:52px">`;
+    html += `<div class="bb-outside-row" style="margin-left:${sideMargin}px">`;
     html += `<button class="bb-outside-btn" data-bet-id="low" data-action="low">1-18</button>`;
     html += `<button class="bb-outside-btn" data-bet-id="even" data-action="even">Par</button>`;
     html += `<button class="bb-outside-btn is-red" data-bet-id="color-red" data-action="color-red">🔴</button>`;
@@ -259,10 +262,13 @@
     document.getElementById("btn-clear-bets").classList.toggle("hidden", phase !== "betting" || myBets.length === 0);
 
     const board = document.getElementById("betting-board");
-    board.classList.toggle("betting-active", phase === "betting");
-    document.getElementById("board-scroll").style.opacity = phase === "betting" ? "1" : ".6";
-    document.getElementById("board-scroll").style.pointerEvents = phase === "betting" ? "auto" : "none";
-    document.getElementById("mobile-bet-hint").classList.toggle("hidden", !(phase === "betting" && window.innerWidth < 640));
+    const boardScroll = document.getElementById("board-scroll");
+    const betting = phase === "betting";
+    board.classList.toggle("betting-active", betting);
+    boardScroll.classList.toggle("mobile-bleed", betting);
+    boardScroll.style.opacity = betting ? "1" : ".6";
+    boardScroll.style.pointerEvents = betting ? "auto" : "none";
+    document.getElementById("mobile-bet-hint").classList.add("hidden"); // el paño ya no requiere desplazamiento
   }
 
   function renderMyBalanceBox() {
