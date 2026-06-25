@@ -108,6 +108,7 @@
 
   function renderAll() {
     document.getElementById("pot-display").textContent = state ? formatCOP(state.pot) : "$0";
+    document.getElementById("pot-display-mobile").textContent = `Pozo: ${state ? formatCOP(state.pot) : "$0"}`;
     renderTurnOrder();
     renderPlayers();
     renderLog();
