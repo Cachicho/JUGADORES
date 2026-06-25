@@ -180,6 +180,8 @@
     </aside>
 
     <div class="center-col">
+      <div id="pot-display-mobile" class="pot-display-mobile">Pozo: $0</div>
+
       <div id="ante-controls" class="bet-controls">
         <input id="intermedio-ante-amount" type="number" min="1" class="field-input bet-amount-input" placeholder="Pozo inicial (ante)" value="200" />
         <button id="btn-start-intermedio" class="btn btn-gold">🃏 Iniciar Ronda (cobra ante a todos)</button>
@@ -234,6 +236,10 @@
       <div class="panel-box">
         <p class="panel-title">Sala</p>
         <button id="btn-close-room" class="btn btn-outline-red btn-block">🔒 Cerrar sala para todos</button>
+      </div>
+      <div id="admin-departed-box" class="panel-box hidden">
+        <p class="panel-title">Jugadores que se fueron (saldo pendiente)</p>
+        <div id="admin-departed-list"></div>
       </div>
       <div class="panel-box">
         <p class="panel-title">Saldo de jugadores</p>
