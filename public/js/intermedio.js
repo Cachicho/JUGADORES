@@ -69,9 +69,11 @@
     if (state.phase === "turn") {
       phaseLabel.textContent = "🃏 En juego";
       if (state.forcedSkip) {
-        statusEl.textContent = "Cartas consecutivas: no hay número entre ellas. Turno saltado automáticamente.";
+        statusEl.textContent = state.isPair
+          ? "Pareja: no se puede apostar a cartas iguales. Turno saltado automáticamente."
+          : "Cartas consecutivas: no hay número entre ellas. Turno saltado automáticamente.";
       } else if (isMyTurn) {
-        statusEl.textContent = state.isPair ? "¡Pareja! Solo ganas premio especial si la 3ª carta también iguala." : "Es tu turno: elige cuánto apostar.";
+        statusEl.textContent = "Es tu turno: elige cuánto apostar.";
         betControls.classList.remove("hidden");
         document.getElementById("intermedio-bet-amount").max = state.pot;
         document.getElementById("intermedio-bet-amount").value = "";
@@ -133,6 +135,10 @@
     const amount = Number(document.getElementById("intermedio-bet-amount").value);
     if (!amount || amount < 1) return showToast("Ingresa un monto válido.", "error");
     socket.emit("intermedio:place_bet", { amount });
+  });
+  document.getElementById("btn-intermedio-allin")?.addEventListener("click", () => {
+    if (!state || !state.pot) return;
+    socket.emit("intermedio:place_bet", { amount: state.pot });
   });
   document.getElementById("btn-intermedio-skip")?.addEventListener("click", () => socket.emit("intermedio:skip_turn"));
   document.getElementById("btn-intermedio-reveal")?.addEventListener("click", () => socket.emit("intermedio:reveal"));
