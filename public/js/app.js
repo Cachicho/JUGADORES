@@ -98,10 +98,12 @@ function initSocket() {
     renderAdminList();
     if (window.Roulette) window.Roulette.onPlayers(state.players);
     if (window.Intermedio) window.Intermedio.onPlayers(state.players);
+    if (window.Nueve) window.Nueve.onPlayers(state.players);
   });
 
   if (window.Roulette) window.Roulette.attachSocket(App.socket);
   if (window.Intermedio) window.Intermedio.attachSocket(App.socket);
+  if (window.Nueve) window.Nueve.attachSocket(App.socket);
 }
 
 // ═══════════════════ TOPBAR / PLAYER WIDGETS ═══════════════════
@@ -113,7 +115,7 @@ function renderTopbarPlayer() {
        <div><div class="tp-name">${escapeHtml(App.player.name)}</div>
        <div class="tp-balance">${formatCOP(App.player.balance)}</div></div>`
     : "";
-  ["topbar-player", "topbar-player-roulette", "topbar-player-intermedio"].forEach((id) => {
+  ["topbar-player", "topbar-player-roulette", "topbar-player-intermedio", "topbar-player-nueve"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
   });
@@ -205,6 +207,7 @@ function navigateToGame(game) {
   if (game === "lobby") showView("lobby");
   else if (game === "roulette") { showView("roulette"); window.Roulette?.onEnter(); }
   else if (game === "intermedio") { showView("intermedio"); window.Intermedio?.onEnter(); }
+  else if (game === "nueve") { showView("nueve"); window.Nueve?.onEnter(); }
 }
 
 document.querySelectorAll(".game-card").forEach((card) => {

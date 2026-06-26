@@ -11,6 +11,7 @@ const { Server } = require("socket.io");
 const { RoomManager } = require("./lib/rooms");
 const roulette = require("./lib/roulette");
 const intermedio = require("./lib/intermedio");
+const nueve = require("./lib/nueve");
 
 const PORT = Number(process.env.PORT || 3402);
 const APP_URL = process.env.APP_URL || "http://localhost:3402";
@@ -133,6 +134,22 @@ function emitIntermedioState(room) {
   });
 }
 
+function emitNueveState(room) {
+  const st = room.nueve;
+  io.to(room.code).emit("nueve:state", {
+    phase: st.phase,
+    pot: st.pot,
+    ante: st.ante,
+    turnOrder: st.turnOrder,
+    turnIndex: st.turnIndex,
+    currentPlayerId: nueve.currentPlayerId(st),
+    hands: st.hands,
+    tiebreakRound: st.tiebreakRound,
+    lastWinner: st.lastWinner,
+    log: st.log,
+  });
+}
+
 function requireRoom(socket) {
   const idx = socketIndex.get(socket.id);
   if (!idx) return null;
@@ -208,6 +225,7 @@ io.on("connection", (socket) => {
       socket.emit("roulette:state", null); // el cliente pedirá estado completo tras unirse
       emitRouletteState(room);
       emitIntermedioState(room);
+      emitNueveState(room);
     } catch (err) {
       console.error(err);
       cb({ ok: false, error: "Error interno uniéndose a la sala." });
@@ -218,7 +236,7 @@ io.on("connection", (socket) => {
   socket.on("hub:select_game", ({ game }) => {
     const ctx = requireRoom(socket);
     if (!ctx) return;
-    if (!["lobby", "roulette", "intermedio"].includes(game)) return;
+    if (!["lobby", "roulette", "intermedio", "nueve"].includes(game)) return;
     ctx.room.game = game;
     emitRoomState(ctx.room);
   });
@@ -397,6 +415,37 @@ io.on("connection", (socket) => {
       scheduleAutoSkipIfNeeded(room); // por si la siguiente mano también es consecutiva
     }, 2800);
   }
+
+  // ══════════════════════════ "9" ══════════════════════════════════════════
+  socket.on("nueve:start_round", (payload) => {
+    const ctx = requireAdmin(socket);
+    if (!ctx) return;
+    const room = ctx.room;
+    const playerIds = Array.from(room.players.keys());
+    const customAnte = payload && payload.ante !== undefined ? payload.ante : undefined;
+    const result = nueve.startRound(room.nueve, room.players, playerIds, customAnte);
+    if (!result.ok) return socket.emit("error:toast", result.error);
+    emitRoomState(room);
+    emitNueveState(room);
+  });
+
+  socket.on("nueve:hit", () => {
+    const ctx = requireRoom(socket);
+    if (!ctx) return;
+    const result = nueve.hit(ctx.room.nueve, ctx.room.players, ctx.playerId);
+    if (!result.ok) return socket.emit("error:toast", result.error);
+    emitRoomState(ctx.room);
+    emitNueveState(ctx.room);
+  });
+
+  socket.on("nueve:stand", () => {
+    const ctx = requireRoom(socket);
+    if (!ctx) return;
+    const result = nueve.stand(ctx.room.nueve, ctx.room.players, ctx.playerId);
+    if (!result.ok) return socket.emit("error:toast", result.error);
+    emitRoomState(ctx.room);
+    emitNueveState(ctx.room);
+  });
 
   // ── Salir de la sala (cualquier jugador, voluntario) ───────────────────
   socket.on("room:leave_room", (_data, cb) => {

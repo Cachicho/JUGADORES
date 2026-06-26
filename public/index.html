@@ -82,6 +82,11 @@
         <div class="game-card-title">Intermedio</div>
         <div class="game-card-desc">In-Between: ¿la carta queda en medio?</div>
       </button>
+      <button class="game-card" data-game="nueve">
+        <div class="game-card-icon">9️⃣</div>
+        <div class="game-card-title">9</div>
+        <div class="game-card-desc">Baraja española: el que más se acerque al 9 gana</div>
+      </button>
     </div>
 
     <h3 class="lobby-heading">Jugadores en la sala</h3>
@@ -224,6 +229,58 @@
   </main>
 </section>
 
+<!-- ═══════════════ VISTA: "9" ═══════════════ -->
+<section id="view-nueve" class="view view-game hidden">
+  <header class="topbar">
+    <button class="btn-back" data-back="lobby">← Lobby</button>
+    <div class="topbar-center">
+      <h2 class="topbar-title">9️⃣ El Nueve</h2>
+      <p id="nueve-phase-label" class="topbar-sub phase-label">Esperando ronda...</p>
+    </div>
+    <div id="topbar-player-nueve" class="topbar-player"></div>
+  </header>
+
+  <main class="game-main">
+    <aside class="side-panel side-left">
+      <div class="panel-box">
+        <p class="panel-title">Pozo central</p>
+        <div id="nueve-pot-display" class="pot-display">$0</div>
+      </div>
+      <div class="panel-box panel-grow">
+        <p class="panel-title">Historial de la sala</p>
+        <div id="nueve-log" class="feed-list"></div>
+      </div>
+    </aside>
+
+    <div class="center-col">
+      <div id="nueve-pot-display-mobile" class="pot-display-mobile">Pozo: $0</div>
+
+      <div id="nueve-ante-controls" class="bet-controls">
+        <input id="nueve-ante-amount" type="number" min="1" class="field-input bet-amount-input" placeholder="Pozo inicial (ante)" value="200" />
+        <button id="btn-start-nueve" class="btn btn-gold">9️⃣ Iniciar Ronda (cobra ante a todos)</button>
+      </div>
+
+      <div id="nueve-turn-order-strip" class="turn-order-strip"></div>
+
+      <p id="nueve-status" class="intermedio-status"></p>
+
+      <div id="nueve-hands-grid" class="nueve-hands-grid"></div>
+
+      <div id="nueve-turn-controls" class="bet-controls hidden">
+        <button id="btn-nueve-hit" class="btn btn-gold">🎴 Pedir carta</button>
+        <button id="btn-nueve-stand" class="btn btn-outline-gold">✋ Plantarse</button>
+      </div>
+    </div>
+
+    <aside class="side-panel side-right">
+      <div class="panel-box">
+        <p class="panel-title">Jugadores</p>
+        <div id="nueve-players" class="players-list players-list-turn"></div>
+      </div>
+    </aside>
+  </main>
+</section>
+
 <!-- ═══════════════ PANEL ADMIN (flotante, disponible en todas las vistas internas) ═══════════════ -->
 <button id="btn-admin-panel" class="admin-fab hidden" title="Panel de Administrador">🛡️</button>
 <div id="admin-modal" class="modal-overlay hidden">
@@ -254,5 +311,6 @@
 <script src="/js/app.js"></script>
 <script src="/js/roulette.js"></script>
 <script src="/js/intermedio.js"></script>
+<script src="/js/nueve.js"></script>
 </body>
 </html>

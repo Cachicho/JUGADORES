@@ -359,6 +359,18 @@ input { font-family: inherit; }
 .bet-controls, .reveal-controls, .next-controls { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
 .bet-amount-input { width: 160px; }
 
+/* ── "9" ──────────────────────────────────────────────────── */
+.nueve-hands-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; width: 100%; }
+.nueve-hand-block {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 130px;
+}
+.nueve-hand-block.active { border-color: var(--gold-500); box-shadow: 0 0 16px rgba(245,158,11,.3); }
+.nueve-hand-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+.nueve-hand-cards { display: flex; gap: 4px; }
+.nueve-hand-label { font-size: 13px; font-weight: 800; color: var(--gold-500); }
+.card-face-sm { width: 46px; height: 64px; font-size: 18px; border-radius: 8px; }
+
 /* ── ADMIN MODAL ──────────────────────────────────────────── */
 .admin-fab {
   position: fixed; bottom: 20px; right: 20px; z-index: 60; width: 56px; height: 56px; border-radius: 50%;
